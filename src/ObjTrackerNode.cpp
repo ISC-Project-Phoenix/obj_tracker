@@ -1,4 +1,4 @@
-#include "TODO_PACKAGE_NAME/TODO_NODE_NAME_node.hpp"
+#include "obj_tracker/ObjTrackerNode_node.hpp"
 
 int main(int argc, char** argv) {
     // Setup runtime
@@ -7,7 +7,7 @@ int main(int argc, char** argv) {
     rclcpp::NodeOptions options;
 
     // Add nodes to executor
-    auto node = std::make_shared<TODO_NODE_NAME>(options);
+    auto node = std::make_shared<ObjTrackerNode>(options);
     exec.add_node(node);
 
     // Run
