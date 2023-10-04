@@ -11,6 +11,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(phnx_msgs REQUIRED)
 
 # Add source for node executable (link non-ros dependencies here)
 add_executable(obj_tracker src/ObjTrackerNode.cpp src/ObjTrackerNode_node.cpp)
@@ -24,6 +25,7 @@ set(dependencies
         rclcpp
         geometry_msgs
         nav_msgs
+        phnx_msgs
         )
 
 # Link ros dependencies
