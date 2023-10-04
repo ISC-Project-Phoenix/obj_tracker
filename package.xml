@@ -10,15 +10,7 @@
     <buildtool_depend>ament_cmake</buildtool_depend>
 
     <depend>rclcpp</depend>
-
-    <!--Messages TODO_EXTRA-->
-    <depend>ackermann_msgs</depend>
-    <depend>sensor_msgs</depend>
-    <depend>std_msgs</depend>
-
-    <!--OpenCv Things TODO_EXTRA-->
-    <depend>cv_bridge</depend>
-    <depend>libopencv-dev</depend>
+    <depend>geometry_msgs</depend>
 
     <test_depend>ament_lint_auto</test_depend>
     <test_depend>ament_cmake_flake8</test_depend>

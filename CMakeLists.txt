@@ -9,13 +9,7 @@ endif ()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
-# Messages TODO_EXTRA
-find_package(ackermann_msgs REQUIRED)
-find_package(sensor_msgs REQUIRED)
-find_package(std_msgs REQUIRED)
-# OpenCV TODO_EXTRA
-find_package(cv_bridge REQUIRED)
-find_package(OpenCV 4.2.0 REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 # Add source for node executable (link non-ros dependencies here)
 add_executable(obj_tracker src/ObjTrackerNode.cpp src/ObjTrackerNode_node.cpp)
@@ -27,13 +21,7 @@ target_compile_features(obj_tracker PUBLIC c_std_99 cxx_std_17)  # Require C99 a
 # Make ros deps a variable so they get linked to tests as well
 set(dependencies
         rclcpp
-        # Messages TODO_EXTRA
-        ackermann_msgs
-        sensor_msgs
-        std_msgs
-        # OpenCv TODO_EXTRA
-        cv_bridge
-        OpenCV
+        geometry_msgs
         )
 
 # Link ros dependencies
