@@ -1,17 +1,19 @@
 #pragma once
 
 #include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/string.hpp"
+#include "geometry_msgs/msg/pose_array.hpp"
 
 class ObjTrackerNode : public rclcpp::Node {
 private:
-    rclcpp::Publisher<std_msgs::msg::String>::SharedPtr pub;
+    /// Filtered poses
+    rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr pose_pub;
 
-    rclcpp::Subscription<std_msgs::msg::String>::SharedPtr sub;
+    /// Poses to be filtered
+    rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr pose_sub;
 
 public:
     ObjTrackerNode(const rclcpp::NodeOptions& options);
 
-    /// subscriber callback
-    void sub_cb(std_msgs::msg::String::SharedPtr msg);
+    /// Pose input
+    void pose_cb(geometry_msgs::msg::PoseArray::SharedPtr msg);
 };
