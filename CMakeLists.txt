@@ -15,7 +15,7 @@ find_package(phnx_msgs REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
 
 # Add source for node executable (link non-ros dependencies here)
-add_executable(obj_tracker src/ObjTrackerNode.cpp src/ObjTrackerNode_node.cpp)
+add_executable(obj_tracker src/ObjTrackerNode.cpp src/ObjTrackerNode_node.cpp src/Hungarian.cpp)
 target_include_directories(obj_tracker PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
         $<INSTALL_INTERFACE:include>)
