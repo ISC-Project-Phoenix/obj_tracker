@@ -9,16 +9,16 @@ cv::Point3f pose_to_cv(const geometry_msgs::msg::Pose& point) {
     return cv::Point3f{(float)point.position.x, (float)point.position.y, (float)point.position.z};
 }
 
-geometry_msgs::msg::Pose mat_to_pose(const cv::Mat& state) {
-    geometry_msgs::msg::Pose pose{};
-    pose.position.x = state.at<float>(0);
-    pose.position.y = state.at<float>(1);
-    pose.position.z = state.at<float>(2);
-
-    return pose;
+geometry_msgs::msg::Pose cv_to_pose(const cv::Point3f& point) {
+    geometry_msgs::msg::Pose p{};
+    p.position.x = point.x;
+    p.position.y = point.y;
+    p.position.z = point.z;
+    return p;
 }
 
-ObjTrackerNode::ObjTrackerNode(const rclcpp::NodeOptions& options) : Node("ObjTrackerNode", options) {
+ObjTrackerNode::ObjTrackerNode(const rclcpp::NodeOptions& options)
+    : Node("ObjTrackerNode", options), mot(10, 0.02, *this) {
     // Pub Sub
     this->pose_sub = this->create_subscription<geometry_msgs::msg::PoseArray>(
         "/object_poses", 10, std::bind(&ObjTrackerNode::pose_cb, this, _1));
@@ -28,21 +28,23 @@ ObjTrackerNode::ObjTrackerNode(const rclcpp::NodeOptions& options) : Node("ObjTr
 void ObjTrackerNode::pose_cb(geometry_msgs::msg::PoseArray::SharedPtr msg) {
     if (msg->poses.empty()) return;
 
-    static Tracker tracker{0, pose_to_cv(msg->poses[0])};
+    // Convert to opencv types
+    rclcpp::Time stamp = msg->header.stamp;
+    std::vector<cv::Point3f> detections;
+    for (auto& pose : msg->poses) {
+        detections.push_back(pose_to_cv(pose));
+    }
 
-    // Predict
-    rclcpp::Time t = msg->header.stamp;
-    tracker.predict(t.seconds());
+    // Filter poses
+    auto filtered = this->mot.filter(detections, stamp.seconds());
 
-    // Correct
-    auto state = tracker.correct(pose_to_cv(msg->poses[0]));
-
-    // Create filtered poses to publish
-    auto pose = mat_to_pose(state);
+    // Convert from cv to ros
     geometry_msgs::msg::PoseArray filtered_arr{};
-    filtered_arr.poses.push_back(pose);
+    for (auto& [id, point] : filtered) {
+        RCLCPP_INFO(this->get_logger(), "id: %lu pose: %f %f %f", id, point.x, point.y, point.z);
+        filtered_arr.poses.push_back(cv_to_pose(point));
+    }
 
     filtered_arr.header = msg->header;
-
     this->pose_pub->publish(filtered_arr);
 }

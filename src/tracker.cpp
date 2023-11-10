@@ -33,9 +33,13 @@ Tracker::Tracker(uint64_t id, const cv::Point3f& inital_Point) {
     // clang-format on
 
     // Set initial values
-    state_pre.at<float>(0, 0) = inital_Point.x;
-    state_pre.at<float>(0, 1) = inital_Point.y;
-    state_pre.at<float>(0, 2) = inital_Point.z;
+    state_pre.at<float>(0) = inital_Point.x;
+    state_pre.at<float>(1) = inital_Point.y;
+    state_pre.at<float>(2) = inital_Point.z;
+
+    state_post.at<float>(0) = inital_Point.x;
+    state_post.at<float>(1) = inital_Point.y;
+    state_post.at<float>(2) = inital_Point.z;
 
     this->filter.measurementMatrix = measure;
     this->filter.transitionMatrix = trans;
@@ -63,10 +67,15 @@ void Tracker::update_dt(double stamp) {
 
 cv::Mat Tracker::predict(double stamp) {
     this->update_dt(stamp);
+    this->missed_frames++;
 
     return this->filter.predict();
 }
 
 cv::Mat Tracker::correct(const cv::Point3f& point) {
+    this->missed_frames = 0;
     return this->filter.correct((cv::Mat_<float>(3, 1) << point.x, point.y, point.z));
 }
+cv::Mat Tracker::get_state() const { return filter.statePost; }
+
+uint64_t Tracker::get_missed_frames() const { return this->missed_frames; }
