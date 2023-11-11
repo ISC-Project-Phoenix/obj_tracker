@@ -18,7 +18,11 @@ geometry_msgs::msg::Pose cv_to_pose(const cv::Point3f& point) {
 }
 
 ObjTrackerNode::ObjTrackerNode(const rclcpp::NodeOptions& options)
-    : Node("ObjTrackerNode", options), mot(10, 0.02, *this) {
+    : Node("ObjTrackerNode", options),
+      mot(this->declare_parameter("max_frames_missed", 5), this->declare_parameter("max_dist", 1.0)) {
+    // Random params
+    this->declare_parameter("test_latency", false);
+
     // Pub Sub
     this->pose_sub = this->create_subscription<geometry_msgs::msg::PoseArray>(
         "/object_poses", 10, std::bind(&ObjTrackerNode::pose_cb, this, _1));
@@ -26,7 +30,7 @@ ObjTrackerNode::ObjTrackerNode(const rclcpp::NodeOptions& options)
 }
 
 void ObjTrackerNode::pose_cb(geometry_msgs::msg::PoseArray::SharedPtr msg) {
-    if (msg->poses.empty()) return;
+    auto start_t = std::chrono::steady_clock::now();
 
     // Convert to opencv types
     rclcpp::Time stamp = msg->header.stamp;
@@ -41,10 +45,39 @@ void ObjTrackerNode::pose_cb(geometry_msgs::msg::PoseArray::SharedPtr msg) {
     // Convert from cv to ros
     geometry_msgs::msg::PoseArray filtered_arr{};
     for (auto& [id, point] : filtered) {
-        RCLCPP_INFO(this->get_logger(), "id: %lu pose: %f %f %f", id, point.x, point.y, point.z);
         filtered_arr.poses.push_back(cv_to_pose(point));
     }
 
     filtered_arr.header = msg->header;
     this->pose_pub->publish(filtered_arr);
+
+    if (this->get_parameter("test_latency").as_bool()) {
+        auto delta = std::chrono::steady_clock::now() - start_t;
+        auto ms = std::chrono::duration_cast<std::chrono::nanoseconds>(delta).count();
+        calc_latency(ms);
+    }
+}
+
+void ObjTrackerNode::calc_latency(long ms) const {
+    static std::array<uint64_t, 300> measurements;
+    static uint64_t index = 0;
+    measurements[index] = ms;
+    index = index + 1 > measurements.size() - 1 ? 0 : index + 1;
+
+    // Calc statistics
+    double mean = 0;
+    for (uint64_t i = 0; i != index; ++i) {
+        mean += (double)measurements[i];
+    }
+    mean /= (double)index + 1;
+
+    double mean2 = 0;
+    for (uint64_t i = 0; i != index; ++i) {
+        mean2 += std::pow((double)measurements[i], 2);
+    }
+    mean2 /= (double)index + 1;
+
+    double std_dev = sqrt(mean2 - std::pow(mean, 2));
+
+    RCLCPP_INFO(get_logger(), "Mean: %fms Std-dev: %fms", mean * 1e-6, std_dev * 1e-6);
 }

@@ -23,8 +23,8 @@ Tracker::Tracker(uint64_t id, const cv::Point3f& inital_Point) {
         0, 0, 0, 0, 1, 0, // vy
         0, 0, 0, 0, 0, 1); // vz
 
-    // Prediction covariance TODO tune
-    cv::Mat_<float> proc_noise = cv::Mat::eye(6, 6, CV_32F) * 0.01;
+    // Prediction covariance
+    cv::Mat_<float> proc_noise = cv::Mat::eye(6, 6, CV_32F) * 0.01; //TODO make configurable
 
     cv::Mat noise_pre = cv::Mat::eye(6, 6, CV_32F);
     cv::Mat state_pre = cv::Mat::zeros(6, 1, CV_32F);
@@ -36,10 +36,12 @@ Tracker::Tracker(uint64_t id, const cv::Point3f& inital_Point) {
     state_pre.at<float>(0) = inital_Point.x;
     state_pre.at<float>(1) = inital_Point.y;
     state_pre.at<float>(2) = inital_Point.z;
+    state_pre.at<float>(3) = -0.3; // TODO configure
 
     state_post.at<float>(0) = inital_Point.x;
     state_post.at<float>(1) = inital_Point.y;
     state_post.at<float>(2) = inital_Point.z;
+    state_post.at<float>(3) = -0.3;
 
     this->filter.measurementMatrix = measure;
     this->filter.transitionMatrix = trans;
@@ -47,7 +49,7 @@ Tracker::Tracker(uint64_t id, const cv::Point3f& inital_Point) {
     this->filter.statePost = state_post;
     this->filter.statePre = state_pre;
     this->filter.errorCovPre = noise_pre;
-    cv::setIdentity(filter.measurementNoiseCov, cv::Scalar(1e-1));
+    cv::setIdentity(filter.measurementNoiseCov, cv::Scalar(1e-1)); // TODO make configurable
 }
 
 void Tracker::update_dt(double stamp) {
@@ -76,6 +78,7 @@ cv::Mat Tracker::correct(const cv::Point3f& point) {
     this->missed_frames = 0;
     return this->filter.correct((cv::Mat_<float>(3, 1) << point.x, point.y, point.z));
 }
+
 cv::Mat Tracker::get_state() const { return filter.statePost; }
 
 uint64_t Tracker::get_missed_frames() const { return this->missed_frames; }

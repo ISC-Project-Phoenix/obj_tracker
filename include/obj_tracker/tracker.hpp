@@ -18,7 +18,8 @@ class Tracker {
 public:
     Tracker(uint64_t id, const cv::Point3f& inital_Point);
 
-    /// Predicts the next location of the track
+    /// Predicts the next location of the track.
+    /// A timestamp in seconds is passed to aid in predicting motion.
     cv::Mat predict(double stamp);
 
     /// Corrects the filter

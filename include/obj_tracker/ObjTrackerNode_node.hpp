@@ -15,6 +15,8 @@ private:
     /// Multiple object tracker
     MOT mot;
 
+    void calc_latency(long ms) const;
+
 public:
     ObjTrackerNode(const rclcpp::NodeOptions& options);
 

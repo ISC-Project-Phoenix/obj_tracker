@@ -43,9 +43,11 @@ void TrackerManager::prune() {
         this->free_ids.push(id);
     }
 }
+
 void TrackerManager::correct_tracker(uint64_t id, const cv::Point3f& measurement) {
     this->trackers.at(id).correct(measurement);
 }
+
 std::vector<std::pair<uint64_t, cv::Point3f>> TrackerManager::get_all_states() const {
     std::vector<std::pair<uint64_t, cv::Point3f>> states;
 
@@ -59,14 +61,20 @@ std::vector<std::pair<uint64_t, cv::Point3f>> TrackerManager::get_all_states() c
     return states;
 }
 
-MOT::MOT(uint64_t max_missed_frames, double max_cost, rclcpp::Node& node)
-    : tracks(max_missed_frames), max_cost(max_cost), node(node) {}
+MOT::MOT(uint64_t max_missed_frames, double max_cost) : tracks(max_missed_frames), max_cost(max_cost) {}
 
 std::vector<std::pair<uint64_t, cv::Point3f>> MOT::filter(const std::vector<cv::Point3f>& detections, double stamp) {
     // Forward predict all tracks
     auto pred = this->tracks.predict_all(stamp);
 
-    // TODO if pred and detec are diff sizes, we may need to pad
+    // If no detections, then just instantly publish the predictions
+    if (detections.empty()) {
+        // Remove invalidated trackers
+        this->tracks.prune();
+
+        // Output states of all tracks
+        return this->tracks.get_all_states();
+    }
 
     // Build C_ij cost matrix as dist between each track and detection
     std::vector<std::vector<double>> cost{};
@@ -90,13 +98,18 @@ std::vector<std::pair<uint64_t, cv::Point3f>> MOT::filter(const std::vector<cv::
     }
 
     // Find all missed detections
-    std::vector<int> skip_set{}; //TODO this definitely doesnt work
+    std::vector<int> skip_set{};
     for (uint64_t i = 0; i < assign.size(); ++i) {
-        auto paired_detect = assign[i];
+        int paired_detect = assign[i];
+
+        // If trackers > detections, then some trackers are paired to -1 to show no detection
+        if (paired_detect < 0) {
+            skip_set.push_back((int)i);
+        }
+
         auto paired_cost = cost[i][paired_detect];
 
         if (paired_cost > this->max_cost) {
-            RCLCPP_INFO(node.get_logger(), "Skipping: %lu", i);
             skip_set.push_back((int)i);
         }
     }
@@ -111,28 +124,23 @@ std::vector<std::pair<uint64_t, cv::Point3f>> MOT::filter(const std::vector<cv::
             continue;
         }
 
-        RCLCPP_INFO(node.get_logger(), "Correcting: %lu", i);
         this->tracks.correct_tracker(assign_to_id[i], detections[assign[i]]);
     }
 
     // Allocate new tracks for unmatched detections
-    for (uint64_t j = 0; j < detections.size(); ++j) {
+    for (int j = 0; j < (int)detections.size(); ++j) {
         bool new_track = true;
 
-        // Try to find detection in assignment - skip
-        for (uint64_t i = 0; i < assign.size(); ++i) {
-            if (std::find(skip_set.begin(), skip_set.end(), i) != skip_set.end()) {
-                continue;
-            }
-
-            if ((uint64_t)assign[i] == j) {
+        // Try to find detection in assignment
+        // If there are more detections than trackers, the detections will not be in assign
+        for (int i : assign) {
+            if (i == j) {
                 new_track = false;
                 break;
             }
         }
 
         if (new_track) {
-            RCLCPP_INFO(node.get_logger(), "Adding new track!");
             this->tracks.add_tracker(detections[j]);
         }
     }

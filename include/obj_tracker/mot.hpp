@@ -5,8 +5,6 @@
 #include "stack"
 #include "tracker.hpp"
 
-#include "rclcpp/rclcpp.hpp"
-
 /// Data structure to manage allocating tracker ids
 class TrackerManager {
     /// Stack of ids to recycle
@@ -43,11 +41,8 @@ class MOT {
     /// Largest distance between detection and track for it to be considered a match
     double max_cost;
 
-    //TODO remove
-    rclcpp::Node& node;
-
 public:
-    explicit MOT(uint64_t max_missed_frames, double max_cost, rclcpp::Node& node);
+    explicit MOT(uint64_t max_missed_frames, double max_cost);
 
     /// Continuously filters detections over time via tracking. Returns (id, state).
     std::vector<std::pair<uint64_t, cv::Point3f>> filter(const std::vector<cv::Point3f>& detections, double stamp);
