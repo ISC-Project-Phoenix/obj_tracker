@@ -1,47 +1,38 @@
-An opinionated ROS2 C++ node template, optimised for ISC.
+# obj_tracker
+From package '[obj_tracker](https://github.com/ISC-Project-Phoenix/obj_tracker)'
+# File
+`./src/ObjTrackerNode.cpp`
 
-# Instructions
+## Summary 
+ Generic Multiple Object Tracker (MOT) node for ROS2. Obj_tracker tracks PoseArrays over time, both smoothing the pose
+and maintaining indentity. It does this by predicting with Kalman filters, then associating tracks with detections
+by solving the resulting assignment problem.
 
-1. Clone repo inside your workspaces src directory (Ex. phnx_ws/src)
-2. `rosdep install --from-paths . --ignore-src -r -y` to install deps
-3. `colcon build` to make sure the repo builds before you mess with it
-4. Replace the following in both file names and code exactly and consistently. 
-   1. obj_tracker: Replace with the package name. Use snake case. Ex. `data_logger`
-   2. ObjTrackerNode: Replace with the node name. Use Pascal case. Ex. `DataLogger`
-5. `colcon build` again. If it builds, you are done
-6. Rename outer folder
-7. Review the optional dependencies, and remove what you do not need
+## Topics
 
-# Dependencies
-Some common extra dependencies are included. Review them and remove what you don't need.
-These are marked with TODO_EXTRA.
+### Publishes
+- `/tracks`: Array of Filtered poses
 
-# Features
+### Subscribes
+- `/object_poses`: Array of Poses to filter
 
-- Unit tests
-- ROS-Industrial github CI (will test units and lints)
-- C++ formatting via clangformat
-- A selection of sane lints
-- A single node setup in a multithreaded executor
+## Params
+- `max_frames_missed`: Number of updates a tracker is allowed to predict without being matched to a detection.
+Smaller numbers will be vulerable to flaky detections, larger values can stick around too long after detection leaves.
+- `max_dist`: Max distince in meters allowed between a track and detection before they are considered to not be associated.
+This will need to be larger for data with high amplitude in its noise, but that risks swapping tracks between detections.
 
-# File structure
+- `prediction_cov`: Scalar used for the diagonal of the prediction covarience matrix of the kalman filters. Lower values weight the filter
+more towards predictions.
 
-```
-.
-├── include
-│   └── obj_tracker
-│       └── ObjTrackerNode_node.hpp
-├── package.xml
-├── README.md
-├── src
-│   ├── ObjTrackerNode.cpp
-│   └── ObjTrackerNode_node.cpp
-└── tests
-    └── unit.cpp
-```
+- `measure_cov`: Scalar used for the diagonal of the measurement covarience matrix of the kalman filters. Lower values weight the filter
+more towards measurements.
 
-ObjTrackerNode_node: Source files for the ROS2 node object itself, and only itself
+- `inital_vx`: Scalar used for the inital x velocity state in the kalman filters. Use this to bias the filters inital predictions to
+follow object motion if you are moving forward or backwards.
 
-ObjTrackerNode.cpp: Source for the main function of the node, and only the main function
+- `test_latency`: Outputs the latency of the node as logs if true.
 
-tests/unit.cpp: Example file for unit tests. This is linked to the node and ros, so both can be used
+- `visualize_ids`: Publishes id markers in rviz if true.
+
+

@@ -11,7 +11,6 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(phnx_msgs REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
 find_package(visualization_msgs REQUIRED)
 
@@ -27,7 +26,6 @@ set(dependencies
         rclcpp
         geometry_msgs
         nav_msgs
-        phnx_msgs
         OpenCV
         visualization_msgs
 )

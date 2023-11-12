@@ -1,0 +1,70 @@
+#ROS package you are documenting
+package_name = "obj_tracker"
+repo = "https://github.com/ISC-Project-Phoenix/obj_tracker"
+
+#You can have multiple nodes in one package
+[[nodes]]
+node_name = 'obj_tracker'
+#Relitive to this file
+source_file = ['./src/ObjTrackerNode.cpp']
+summary = '''
+Generic Multiple Object Tracker (MOT) node for ROS2. Obj_tracker tracks PoseArrays over time, both smoothing the pose
+and maintaining indentity. It does this by predicting with Kalman filters, then associating tracks with detections
+by solving the resulting assignment problem.
+'''
+
+#Your published topics (optional)
+[[nodes.publishes]]
+name = '/tracks'
+description = 'Array of Filtered poses'
+
+#Your subscribed topics (optional)
+[[nodes.subscribes]]
+name = '/object_poses'
+description = 'Array of Poses to filter'
+
+#Your node parameters (optional)
+[[nodes.params]]
+name = 'max_frames_missed'
+description = '''Number of updates a tracker is allowed to predict without being matched to a detection.
+Smaller numbers will be vulerable to flaky detections, larger values can stick around too long after detection leaves.'''
+
+[[nodes.params]]
+name = 'max_dist'
+description = '''
+Max distince in meters allowed between a track and detection before they are considered to not be associated.
+This will need to be larger for data with high amplitude in its noise, but that risks swapping tracks between detections.
+'''
+
+[[nodes.params]]
+name = 'prediction_cov'
+description = '''
+Scalar used for the diagonal of the prediction covarience matrix of the kalman filters. Lower values weight the filter
+more towards predictions.
+'''
+
+[[nodes.params]]
+name = 'measure_cov'
+description = '''
+Scalar used for the diagonal of the measurement covarience matrix of the kalman filters. Lower values weight the filter
+more towards measurements.
+'''
+
+[[nodes.params]]
+name = 'inital_vx'
+description = '''
+Scalar used for the inital x velocity state in the kalman filters. Use this to bias the filters inital predictions to
+follow object motion if you are moving forward or backwards.
+'''
+
+[[nodes.params]]
+name = 'test_latency'
+description = '''
+Outputs the latency of the node as logs if true.
+'''
+
+[[nodes.params]]
+name = 'visualize_ids'
+description = '''
+Publishes id markers in rviz if true.
+'''
