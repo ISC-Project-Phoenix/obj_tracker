@@ -19,7 +19,9 @@ geometry_msgs::msg::Pose cv_to_pose(const cv::Point3f& point) {
 
 ObjTrackerNode::ObjTrackerNode(const rclcpp::NodeOptions& options)
     : Node("ObjTrackerNode", options),
-      mot(this->declare_parameter("max_frames_missed", 5), this->declare_parameter("max_dist", 1.0)) {
+      mot(this->declare_parameter("max_frames_missed", 5), this->declare_parameter("max_dist", 1.0),
+          this->declare_parameter("prediction_cov", 0.01f), this->declare_parameter("measure_cov", 1.0f),
+          this->declare_parameter("inital_vx", -0.3f)) {
     // Random params
     this->declare_parameter("test_latency", false);
 

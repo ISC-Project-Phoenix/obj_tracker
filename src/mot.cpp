@@ -2,7 +2,7 @@
 
 TrackerManager::TrackerManager(uint64_t max_missed_frames) : max_missed_frames(max_missed_frames) {}
 
-void TrackerManager::add_tracker(cv::Point3f inital_point) {
+void TrackerManager::add_tracker(cv::Point3f inital_point, float pred_cov, float measure_cov, float inital_vx) {
     uint64_t id;
 
     // If no ids to recycle, then allocate next highest id
@@ -13,7 +13,7 @@ void TrackerManager::add_tracker(cv::Point3f inital_point) {
         this->free_ids.pop();
     }
 
-    this->trackers.try_emplace(id, id, inital_point);
+    this->trackers.try_emplace(id, id, inital_point, pred_cov, measure_cov, inital_vx);
 }
 
 std::map<uint64_t, cv::Mat> TrackerManager::predict_all(double stamp) {
@@ -61,7 +61,12 @@ std::vector<std::pair<uint64_t, cv::Point3f>> TrackerManager::get_all_states() c
     return states;
 }
 
-MOT::MOT(uint64_t max_missed_frames, double max_cost) : tracks(max_missed_frames), max_cost(max_cost) {}
+MOT::MOT(uint64_t max_missed_frames, double max_cost, float pred_cov, float measure_cov, float inital_vx)
+    : tracks(max_missed_frames),
+      max_cost(max_cost),
+      pred_cov(pred_cov),
+      measure_cov(measure_cov),
+      inital_vx(inital_vx) {}
 
 std::vector<std::pair<uint64_t, cv::Point3f>> MOT::filter(const std::vector<cv::Point3f>& detections, double stamp) {
     // Forward predict all tracks
@@ -141,7 +146,7 @@ std::vector<std::pair<uint64_t, cv::Point3f>> MOT::filter(const std::vector<cv::
         }
 
         if (new_track) {
-            this->tracks.add_tracker(detections[j]);
+            this->tracks.add_tracker(detections[j], this->pred_cov, this->measure_cov, this->inital_vx);
         }
     }
 

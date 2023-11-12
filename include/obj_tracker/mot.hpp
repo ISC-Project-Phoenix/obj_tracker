@@ -19,7 +19,7 @@ public:
     explicit TrackerManager(uint64_t max_missed_frames);
 
     /// Allocates a new tracker
-    void add_tracker(cv::Point3f inital_point);
+    void add_tracker(cv::Point3f inital_point, float pred_cov, float measure_cov, float inital_vx);
 
     /// Predicts the state of all tracks at some timestamp
     std::map<uint64_t, cv::Mat> predict_all(double stamp);
@@ -40,9 +40,15 @@ class MOT {
     HungarianAlgorithm solver{};
     /// Largest distance between detection and track for it to be considered a match
     double max_cost;
+    /// Prediction covariance for trackers
+    float pred_cov;
+    /// Measure covariance for trackers
+    float measure_cov;
+    /// Inital X velocity for trackers
+    float inital_vx;
 
 public:
-    explicit MOT(uint64_t max_missed_frames, double max_cost);
+    explicit MOT(uint64_t max_missed_frames, double max_cost, float pred_cov, float measure_cov, float inital_vx);
 
     /// Continuously filters detections over time via tracking. Returns (id, state).
     std::vector<std::pair<uint64_t, cv::Point3f>> filter(const std::vector<cv::Point3f>& detections, double stamp);

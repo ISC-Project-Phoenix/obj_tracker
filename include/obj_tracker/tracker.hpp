@@ -4,6 +4,7 @@
 #include "opencv2/video/tracking.hpp"
 #include "optional"
 
+/// Tracking state of a single pose
 class Tracker {
     uint64_t id;
     cv::KalmanFilter filter{};
@@ -16,7 +17,7 @@ class Tracker {
     void update_dt(double stamp);
 
 public:
-    Tracker(uint64_t id, const cv::Point3f& inital_Point);
+    Tracker(uint64_t id, const cv::Point3f& inital_Point, float pred_cov, float measure_cov, float inital_vx);
 
     /// Predicts the next location of the track.
     /// A timestamp in seconds is passed to aid in predicting motion.
