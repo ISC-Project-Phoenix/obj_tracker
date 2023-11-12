@@ -13,6 +13,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(phnx_msgs REQUIRED)
 find_package(OpenCV 4.2.0 REQUIRED)
+find_package(visualization_msgs REQUIRED)
 
 # Add source for node executable (link non-ros dependencies here)
 add_executable(obj_tracker src/ObjTrackerNode.cpp src/ObjTrackerNode_node.cpp src/Hungarian.cpp src/tracker.cpp src/mot.cpp)
@@ -28,6 +29,7 @@ set(dependencies
         nav_msgs
         phnx_msgs
         OpenCV
+        visualization_msgs
 )
 
 # Link ros dependencies

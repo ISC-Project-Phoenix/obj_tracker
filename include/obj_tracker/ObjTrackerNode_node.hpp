@@ -3,6 +3,7 @@
 #include "geometry_msgs/msg/pose_array.hpp"
 #include "mot.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "visualization_msgs/msg/marker_array.hpp"
 
 class ObjTrackerNode : public rclcpp::Node {
 private:
@@ -11,6 +12,8 @@ private:
 
     /// Poses to be filtered
     rclcpp::Subscription<geometry_msgs::msg::PoseArray>::SharedPtr pose_sub;
+
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr viz_pub;
 
     /// Multiple object tracker
     MOT mot;

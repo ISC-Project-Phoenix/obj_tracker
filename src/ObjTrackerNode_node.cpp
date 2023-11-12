@@ -24,11 +24,13 @@ ObjTrackerNode::ObjTrackerNode(const rclcpp::NodeOptions& options)
           this->declare_parameter("inital_vx", -0.3f)) {
     // Random params
     this->declare_parameter("test_latency", false);
+    this->declare_parameter("visualize_ids", true);
 
     // Pub Sub
     this->pose_sub = this->create_subscription<geometry_msgs::msg::PoseArray>(
         "/object_poses", 10, std::bind(&ObjTrackerNode::pose_cb, this, _1));
     this->pose_pub = this->create_publisher<geometry_msgs::msg::PoseArray>("/tracks", 1);
+    this->viz_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("/visualization_marker_array", 1);
 }
 
 void ObjTrackerNode::pose_cb(geometry_msgs::msg::PoseArray::SharedPtr msg) {
@@ -52,6 +54,40 @@ void ObjTrackerNode::pose_cb(geometry_msgs::msg::PoseArray::SharedPtr msg) {
 
     filtered_arr.header = msg->header;
     this->pose_pub->publish(filtered_arr);
+
+    // Visualize ids as text for rviz
+    if (this->get_parameter("visualize_ids").as_bool()) {
+        visualization_msgs::msg::MarkerArray vis{};
+
+        for (auto& [id, point] : filtered) {
+            std::stringstream ss;
+            ss << "id:" << std::to_string(id);
+
+            visualization_msgs::msg::Marker marker;
+            marker.header.frame_id = msg->header.frame_id;
+            marker.header.stamp = rclcpp::Time{0};
+            marker.lifetime = rclcpp::Duration::from_seconds(0.05);
+            marker.frame_locked = true;
+            marker.ns = "obj_tracker";
+            marker.id = id;
+            marker.type = visualization_msgs::msg::Marker::TEXT_VIEW_FACING;
+            marker.text = ss.str();
+            marker.action = visualization_msgs::msg::Marker::MODIFY;
+            marker.pose.position.x = point.x;
+            marker.pose.position.y = point.y;
+            marker.pose.position.z = point.z + 0.3;
+            marker.scale.x = 0.2;
+            marker.scale.y = 0.2;
+            marker.scale.z = 0.2;
+            marker.color.a = 1.0;
+            marker.color.r = 0.0;
+            marker.color.g = 1.0;
+            marker.color.b = 0.0;
+
+            vis.markers.push_back(marker);
+        }
+        this->viz_pub->publish(vis);
+    }
 
     if (this->get_parameter("test_latency").as_bool()) {
         auto delta = std::chrono::steady_clock::now() - start_t;
