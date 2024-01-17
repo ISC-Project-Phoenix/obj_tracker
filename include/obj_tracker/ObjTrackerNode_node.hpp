@@ -7,6 +7,9 @@
 
 class ObjTrackerNode : public rclcpp::Node {
 private:
+    /// Publishes visualisations if true
+    bool debug;
+
     /// Filtered poses
     rclcpp::Publisher<geometry_msgs::msg::PoseArray>::SharedPtr pose_pub;
 
