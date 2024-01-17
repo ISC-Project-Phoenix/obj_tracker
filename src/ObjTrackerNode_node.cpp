@@ -24,7 +24,7 @@ ObjTrackerNode::ObjTrackerNode(const rclcpp::NodeOptions& options)
           this->declare_parameter("inital_vx", -0.3f)) {
     // Random params
     this->declare_parameter("test_latency", false);
-    this->declare_parameter("visualize_ids", true);
+    debug = this->declare_parameter<bool>("debug", true);
 
     // Pub Sub
     this->pose_sub = this->create_subscription<geometry_msgs::msg::PoseArray>(
@@ -55,8 +55,8 @@ void ObjTrackerNode::pose_cb(geometry_msgs::msg::PoseArray::SharedPtr msg) {
     filtered_arr.header = msg->header;
     this->pose_pub->publish(filtered_arr);
 
-    // Visualize ids as text for rviz
-    if (this->get_parameter("visualize_ids").as_bool()) {
+    // publish visualization if running with debug
+    if (debug) {
         visualization_msgs::msg::MarkerArray vis{};
 
         for (auto& [id, point] : filtered) {
